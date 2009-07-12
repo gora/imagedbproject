@@ -465,4 +465,23 @@ def bulk_caption_reg(request, app_label, model_name):
 bulk_caption = staff_member_required( bulk_caption_reg )
 
 def login_reg(request):
-    return HttpResponseRedirect( getattr(request.REQUEST, 'next', '/home') )
+    #return HttpResponse( '<p>User = "' + request.POST['username'] + '", password = "' + request.POST['password'] + '"</p>' )
+    if request.method == 'POST':
+        from django.contrib.auth import authenticate, login
+        username = request.POST['username']
+        password = request.POST['password']
+        if username == 'undefined' and password == 'undefined':
+            # For normal users from registered IPs: Simply allow in.
+            return HttpResponseRedirect( getattr( request.POST, 'next',
+                                                  '/home' ) )
+        else:
+            user = None
+            # Authenticate only non-default, and non-blank values.
+            if (username == '' or username != 'USERNAME') and \
+                    (password == '' or password != 'PASSWORD'):
+                user = authenticate( username=username, password=password )
+            if user and user.is_active:
+                login( request, user )
+                return HttpResponseRedirect( getattr( request.POST, 'next',
+                                                      '/home' ) )
+    return HttpResponseRedirect( '/' )

@@ -80,7 +80,13 @@ class IPAddressMiddleware(object):
         # Uncomment the following line, and comment the next one to use
         # REMOTE_ADDR.
         # incoming = request.META.get('REMOTE_ADDR')
-        incoming = request.META['HTTP_X_FORWARDED_FOR'].split(",")[0].strip()
+        #incoming = request.META['HTTP_X_FORWARDED_FOR'].split(",")[0].strip()
+        incoming = getattr( request.META, 'HTTP_X_FORWARDED_FOR',
+                            request.META.get('REMOTE_ADDR') )
+        # This is really needed only for HTTP_X_FORWARDED_FOR, which  can be
+        # a comma-separated list of IPs. The client's IP will be the first.
+        if incoming:
+            incoming = incoming.split( ',' )[0].strip()
         is_ip_reg = False
         for ip in self.ip_reg:
             # Following covers single addresses, and all address ranges
